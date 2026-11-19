@@ -1,0 +1,127 @@
+
+!
+! =========================================================
+! CEYLON BREW HOUSE
+! Device: CBH-ISP-01
+! Platform: Cisco 2911
+! IOS Version: 15.1
+! Role: Simulated ISP Router
+! =========================================================
+!
+enable
+configure terminal
+!
+hostname CBH-ISP-01
+!
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+! ---------------------------------------------------------
+! BASIC SECURITY
+! ---------------------------------------------------------
+!
+enable secret REPLACE_WITH_YOUR_ENABLE_SECRET
+!
+username cbhadmin privilege 15 secret REPLACE_WITH_SECURE_PASSWORD
+!
+ip domain-name ceylonbrew.local
+ip ssh version 2
+!
+banner motd ^CSIMULATED ISP - AUTHORIZED ACCESS ONLY^C
+!
+! ---------------------------------------------------------
+! ROUTING SERVICES
+! ---------------------------------------------------------
+!
+ip cef
+no ipv6 cef
+ip classless
+!
+! ---------------------------------------------------------
+! LOOPBACK - SIMULATED INTERNET
+! ---------------------------------------------------------
+!
+interface Loopback0
+ description SIMULATED-INTERNET-DNS
+ ip address 8.8.8.8 255.255.255.255
+!
+! ---------------------------------------------------------
+! WAN CONNECTION TO MAIN ROUTER
+! ---------------------------------------------------------
+!
+interface GigabitEthernet0/1
+ description WAN-TO-CBH-RTR-01
+ ip address 203.0.113.1 255.255.255.252
+ duplex auto
+ speed auto
+ no shutdown
+!
+! ---------------------------------------------------------
+! UNUSED INTERFACES
+! ---------------------------------------------------------
+!
+interface GigabitEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface GigabitEthernet0/2
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+! ---------------------------------------------------------
+! UNUSED VLAN INTERFACE
+! ---------------------------------------------------------
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+! ---------------------------------------------------------
+! STATIC ROUTES TO CEYLON BREW NETWORK
+! ---------------------------------------------------------
+!
+ip route 192.168.10.0 255.255.255.0 203.0.113.2
+ip route 192.168.20.0 255.255.255.0 203.0.113.2
+ip route 192.168.30.0 255.255.255.0 203.0.113.2
+ip route 192.168.99.0 255.255.255.0 203.0.113.2
+!
+! ---------------------------------------------------------
+! SSH MANAGEMENT ACCESS CONTROL
+! ---------------------------------------------------------
+!
+ip access-list standard CBH-SSH-MGMT
+ permit 192.168.10.0 0.0.0.255
+ deny any
+!
+! ---------------------------------------------------------
+! CONSOLE AND AUXILIARY ACCESS
+! ---------------------------------------------------------
+!
+line con 0
+!
+line aux 0
+!
+! ---------------------------------------------------------
+! SSH REMOTE MANAGEMENT
+! ---------------------------------------------------------
+!
+line vty 0 4
+ access-class CBH-SSH-MGMT in
+ login local
+ transport input ssh
+!
+! ---------------------------------------------------------
+! SAVE CONFIGURATION
+! ---------------------------------------------------------
+!
+end
+copy running-config startup-config
+!
+! =========================================================
+! END OF CBH-ISP-01 CONFIGURATION
+! =========================================================
