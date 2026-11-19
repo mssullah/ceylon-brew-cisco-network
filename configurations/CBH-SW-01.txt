@@ -1,0 +1,231 @@
+
+!
+! =========================================================
+! CEYLON BREW HOUSE
+! Device: CBH-SW-01
+! Platform: Cisco Catalyst 2960
+! IOS Version: 15.0
+! Role: Access Switch / VLAN Segmentation / Port Security
+! =========================================================
+!
+enable
+configure terminal
+!
+hostname CBH-SW-01
+!
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+service password-encryption
+!
+! ---------------------------------------------------------
+! BASIC SECURITY
+! ---------------------------------------------------------
+!
+enable secret REPLACE_WITH_YOUR_ENABLE_SECRET
+!
+username cbhadmin privilege 15 secret REPLACE_WITH_SECURE_PASSWORD
+!
+ip domain-name ceylonbrew.local
+ip ssh version 2
+!
+banner motd ^CAUTHORIZED ACCESS ONLY - CEYLON BREW HOUSE^C
+!
+! ---------------------------------------------------------
+! VLAN DATABASE
+! ---------------------------------------------------------
+!
+vlan 10
+ name BREW-ADMIN
+!
+vlan 20
+ name BREW-POS
+!
+vlan 30
+ name BREW-GUEST
+!
+vlan 99
+ name BREW-MGMT
+!
+! ---------------------------------------------------------
+! VLAN 10 - ADMIN PC
+! FastEthernet0/1
+! ---------------------------------------------------------
+!
+interface FastEthernet0/1
+ description ADMIN-PC
+ switchport mode access
+ switchport access vlan 10
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky 0004.9A8C.AA40
+ switchport port-security violation restrict
+ spanning-tree portfast
+!
+! ---------------------------------------------------------
+! VLAN 10 - OFFICE PRINTER
+! FastEthernet0/2
+! ---------------------------------------------------------
+!
+interface FastEthernet0/2
+ description OFFICE-PRINTER
+ switchport mode access
+ switchport access vlan 10
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky 0002.4AD6.3448
+ switchport port-security violation restrict
+ spanning-tree portfast
+!
+! ---------------------------------------------------------
+! UNUSED ADMIN PORTS
+! FastEthernet0/3 - 0/5
+! ---------------------------------------------------------
+!
+interface range FastEthernet0/3 - 5
+ switchport mode access
+ switchport access vlan 10
+ spanning-tree portfast
+ shutdown
+!
+! ---------------------------------------------------------
+! VLAN 20 - POS TERMINAL
+! FastEthernet0/6
+! ---------------------------------------------------------
+!
+interface FastEthernet0/6
+ description POS-TERMINAL
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky 0001.4345.24C8
+ switchport port-security violation restrict
+ spanning-tree portfast
+!
+! ---------------------------------------------------------
+! VLAN 20 - POS RECEIPT PRINTER
+! FastEthernet0/7
+! ---------------------------------------------------------
+!
+interface FastEthernet0/7
+ description POS-RECEIPT-PRINTER
+ switchport mode access
+ switchport access vlan 20
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky 0001.96CA.9BDB
+ switchport port-security violation restrict
+ spanning-tree portfast
+!
+! ---------------------------------------------------------
+! UNUSED POS PORTS
+! FastEthernet0/8 - 0/10
+! ---------------------------------------------------------
+!
+interface range FastEthernet0/8 - 10
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+ shutdown
+!
+! ---------------------------------------------------------
+! VLAN 30 - GUEST ACCESS POINT
+! FastEthernet0/11
+! ---------------------------------------------------------
+!
+interface FastEthernet0/11
+ description GUEST-WIFI-ACCESS-POINT
+ switchport mode access
+ switchport access vlan 30
+ switchport port-security
+ switchport port-security mac-address sticky
+ switchport port-security mac-address sticky 0060.2F1B.40B4
+ switchport port-security violation restrict
+ spanning-tree portfast
+!
+! ---------------------------------------------------------
+! UNUSED SWITCH PORTS
+! FastEthernet0/12 - 0/23
+! ---------------------------------------------------------
+!
+interface range FastEthernet0/12 - 23
+ shutdown
+!
+! ---------------------------------------------------------
+! TRUNK TO MAIN ROUTER
+! FastEthernet0/24
+! ---------------------------------------------------------
+!
+interface FastEthernet0/24
+ description TRUNK-TO-CBH-RTR-01
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,99
+ no shutdown
+!
+! ---------------------------------------------------------
+! UNUSED GIGABIT INTERFACES
+! ---------------------------------------------------------
+!
+interface GigabitEthernet0/1
+ shutdown
+!
+interface GigabitEthernet0/2
+ shutdown
+!
+! ---------------------------------------------------------
+! VLAN 1 - DISABLED
+! ---------------------------------------------------------
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+! ---------------------------------------------------------
+! MANAGEMENT VLAN 99
+! ---------------------------------------------------------
+!
+interface Vlan99
+ description SWITCH-MANAGEMENT
+ ip address 192.168.99.2 255.255.255.0
+ no shutdown
+!
+ip default-gateway 192.168.99.1
+!
+! ---------------------------------------------------------
+! SSH MANAGEMENT ACCESS CONTROL
+! ---------------------------------------------------------
+!
+ip access-list standard CBH-SSH-MGMT
+ permit 192.168.10.0 0.0.0.255
+ deny any
+!
+! ---------------------------------------------------------
+! CONSOLE ACCESS
+! ---------------------------------------------------------
+!
+line con 0
+!
+! ---------------------------------------------------------
+! SSH REMOTE MANAGEMENT
+! ---------------------------------------------------------
+!
+line vty 0 4
+ access-class CBH-SSH-MGMT in
+ login local
+ transport input ssh
+!
+line vty 5 15
+ access-class CBH-SSH-MGMT in
+ login local
+ transport input ssh
+!
+! ---------------------------------------------------------
+! SAVE CONFIGURATION
+! ---------------------------------------------------------
+!
+end
+copy running-config startup-config
+!
+! =========================================================
+! END OF CBH-SW-01 CONFIGURATION
+! =========================================================
